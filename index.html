@@ -4,252 +4,457 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>A quién se lo presté</title>
-<meta name="theme-color" content="#1565c0">
+<meta name="theme-color" content="#4f46e5">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Préstamos">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --azul: #1565c0;
-    --azul-oscuro: #0d47a1;
-    --verde: #43a047;
-    --amarillo: #ffb300;
-    --rojo: #e53935;
-    --gris-fondo: #f2f4f7;
-    --gris-texto: #37474f;
+    --primario: #4f46e5;
+    --primario-oscuro: #3730a3;
+    --primario-claro: #eef2ff;
+    --verde: #10b981;
+    --verde-fondo: #ecfdf5;
+    --amarillo: #f59e0b;
+    --amarillo-fondo: #fffbeb;
+    --rojo: #ef4444;
+    --rojo-fondo: #fef2f2;
+    --gris: #64748b;
+    --gris-claro: #94a3b8;
+    --fondo: #f1f5f9;
+    --superficie: #ffffff;
+    --texto: #1e293b;
+    --borde: #e2e8f0;
+    --sombra: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+    --sombra-md: 0 4px 16px rgba(15,23,42,0.08);
+    --sombra-lg: 0 20px 45px rgba(15,23,42,0.25);
+    --radio: 18px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primario: #818cf8;
+      --primario-oscuro: #6366f1;
+      --primario-claro: #1e1b4b;
+      --verde-fondo: #052e23;
+      --amarillo-fondo: #2b1d05;
+      --rojo-fondo: #2c0e0e;
+      --fondo: #0b1120;
+      --superficie: #161f32;
+      --texto: #e2e8f0;
+      --borde: #26314a;
+      --gris: #94a3b8;
+      --gris-claro: #64748b;
+    }
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   html, body {
     margin: 0;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: var(--gris-fondo);
-    color: var(--gris-texto);
-    min-height: 100vh;
-    overscroll-behavior-y: contain;
+    height: 100%;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-width: 520px;
+    margin: 0 auto;
+    background: var(--fondo);
+    position: relative;
+    overflow: hidden;
   }
 
   header {
-    background: linear-gradient(135deg, var(--azul), var(--azul-oscuro));
+    flex: none;
+    background: linear-gradient(135deg, var(--primario), var(--primario-oscuro));
     color: white;
-    padding: calc(20px + env(safe-area-inset-top)) 20px 22px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    position: sticky;
-    top: 0;
+    padding: calc(18px + env(safe-area-inset-top)) 20px 24px;
+    position: relative;
     z-index: 10;
+    box-shadow: var(--sombra-md);
   }
 
-  header h1 { margin: 0; font-size: 1.4rem; }
-  header p { margin: 6px 0 0; opacity: 0.9; font-size: 0.82rem; }
-
-  .contenedor {
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 18px 14px 100px;
+  .fila-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
   }
 
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 10px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    padding: 12px 18px;
-    transition: transform 0.1s ease, opacity 0.2s ease;
-    font-family: inherit;
+  header h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
-  button:active { transform: scale(0.96); }
+  header p {
+    margin: 5px 0 0;
+    opacity: 0.85;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
 
-  .btn-flotante {
-    position: fixed;
-    right: 20px;
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: var(--azul);
+  .btn-icono {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.16);
     color: white;
-    font-size: 1.8rem;
-    box-shadow: 0 6px 16px rgba(21,101,192,0.5);
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 20;
-  }
-
-  .btn-notif {
-    display: block;
-    width: 100%;
-    background: white;
-    color: var(--azul);
-    border: 2px solid var(--azul);
-    margin-bottom: 16px;
-  }
-  .btn-notif.activo { background: var(--verde); color: white; border-color: var(--verde); }
-
-  /* Modal */
-  .fondo-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 50;
-  }
-  .fondo-modal.visible { display: flex; }
-
-  .modal {
-    background: white;
-    border-radius: 20px 20px 0 0;
-    padding: 24px 22px calc(24px + env(safe-area-inset-bottom));
-    width: 100%;
-    max-width: 480px;
-    max-height: 92vh;
-    overflow-y: auto;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
-    animation: subir 0.25s ease-out;
-  }
-  @keyframes subir { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-  .modal h2 { margin-top: 0; color: var(--azul-oscuro); font-size: 1.3rem; }
-
-  .campo { margin-bottom: 16px; }
-  .campo label {
-    display: block;
-    font-weight: 600;
-    font-size: 0.85rem;
-    margin-bottom: 6px;
-  }
-  .campo input, .campo select {
-    width: 100%;
-    padding: 12px;
-    border: 1.5px solid #cfd8dc;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-family: inherit;
-  }
-  .campo input:focus, .campo select:focus { outline: none; border-color: var(--azul); }
-
-  .tabs-duracion { display: flex; gap: 8px; margin-bottom: 10px; }
-  .tab-duracion {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
-    border: 1.5px solid #cfd8dc;
-    border-radius: 10px;
+    flex: none;
+    border: none;
     cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #78909c;
+    transition: background 0.15s ease, transform 0.1s ease;
   }
-  .tab-duracion.activo { border-color: var(--azul); background: #e3f2fd; color: var(--azul); }
+  .btn-icono:active { transform: scale(0.92); }
+  .btn-icono.activo { background: var(--verde); }
 
-  .acciones-modal { display: flex; gap: 10px; margin-top: 20px; }
-  .acciones-modal button { flex: 1; }
-  .btn-cancelar { background: #eceff1; color: var(--gris-texto); }
-  .btn-guardar { background: var(--azul); color: white; }
-
-  .vacio { text-align: center; padding: 60px 20px; color: #90a4ae; }
-  .vacio .icono { font-size: 3rem; display: block; margin-bottom: 10px; }
-
-  .tarjeta-prestamo {
-    background: white;
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    border-left: 6px solid var(--verde);
-  }
-  .tarjeta-prestamo.pronto { border-left-color: var(--amarillo); }
-  .tarjeta-prestamo.vencido { border-left-color: var(--rojo); }
-  .tarjeta-prestamo.devuelto { border-left-color: #b0bec5; opacity: 0.6; }
-
-  .info-prestamo .objeto { font-size: 1.05rem; font-weight: 700; margin: 0; }
-  .info-prestamo .detalle { font-size: 0.82rem; color: #607d8b; margin: 4px 0 0; }
-  .estado {
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 20px;
-    display: inline-block;
-    margin-top: 8px;
-  }
-  .estado.ok { background: #e8f5e9; color: var(--verde); }
-  .estado.pronto { background: #fff8e1; color: #ff8f00; }
-  .estado.vencido { background: #ffebee; color: var(--rojo); }
-  .estado.devuelto { background: #eceff1; color: #78909c; }
-
-  .botones-tarjeta {
+  .resumen {
     display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
   }
-  .btn-mini {
-    padding: 9px 12px;
-    font-size: 0.78rem;
-    border-radius: 8px;
+  .chip-resumen {
+    background: rgba(255,255,255,0.14);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip-resumen b { font-size: 0.95rem; font-weight: 800; }
+
+  main {
     flex: 1;
-    min-width: 90px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px calc(100px + env(safe-area-inset-bottom));
+    scrollbar-width: thin;
   }
-  .btn-calendario { background: #e3f2fd; color: var(--azul); }
-  .btn-google { background: #fff3e0; color: #ef6c00; }
-  .btn-devolver { background: var(--verde); color: white; }
-  .btn-eliminar { background: #ffebee; color: var(--rojo); }
 
   .instalar-banner {
-    background: #fff8e1;
+    background: var(--amarillo-fondo);
     border: 1.5px solid var(--amarillo);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 12px 14px;
-    font-size: 0.82rem;
-    margin-bottom: 16px;
+    font-size: 0.8rem;
+    margin-bottom: 14px;
     display: none;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
   }
   .instalar-banner.visible { display: flex; }
-  .instalar-banner button { background: var(--amarillo); color: #4a3600; padding: 8px 12px; font-size: 0.78rem; white-space: nowrap; }
+  .instalar-banner button {
+    background: var(--amarillo);
+    color: #422006;
+    padding: 8px 12px;
+    font-size: 0.76rem;
+    white-space: nowrap;
+    border: none;
+    border-radius: 9px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .vacio {
+    text-align: center;
+    padding: 70px 24px;
+    color: var(--gris-claro);
+  }
+  .vacio .icono {
+    font-size: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: var(--primario-claro);
+    margin-bottom: 16px;
+  }
+  .vacio p { margin: 0; font-size: 0.9rem; line-height: 1.5; }
+
+  .tarjeta-prestamo {
+    background: var(--superficie);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--sombra);
+    border: 1px solid var(--borde);
+    border-left: 4px solid var(--verde);
+    transition: box-shadow 0.15s ease;
+  }
+  .tarjeta-prestamo.pronto { border-left-color: var(--amarillo); }
+  .tarjeta-prestamo.vencido { border-left-color: var(--rojo); }
+  .tarjeta-prestamo.devuelto { border-left-color: var(--gris-claro); opacity: 0.55; }
+
+  .info-prestamo { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .info-prestamo .objeto { font-size: 1rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .info-prestamo .detalle { font-size: 0.8rem; color: var(--gris); margin: 5px 0 0; line-height: 1.5; }
+  .info-prestamo .detalle strong { color: var(--texto); }
+
+  .estado {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex: none;
+  }
+  .estado.ok { background: var(--verde-fondo); color: var(--verde); }
+  .estado.pronto { background: var(--amarillo-fondo); color: var(--amarillo); }
+  .estado.vencido { background: var(--rojo-fondo); color: var(--rojo); }
+  .estado.devuelto { background: var(--fondo); color: var(--gris); }
+
+  .botones-tarjeta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .botones-tarjeta.devuelto { grid-template-columns: 1fr; }
+  .btn-mini {
+    padding: 9px 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: transform 0.1s ease, filter 0.15s ease;
+    font-family: inherit;
+  }
+  .btn-mini:active { transform: scale(0.94); }
+  .btn-mini .ico { font-size: 1rem; }
+  .btn-calendario { background: var(--primario-claro); color: var(--primario); }
+  .btn-google { background: #fff3e0; color: #ef6c00; }
+  .btn-devolver { background: var(--verde-fondo); color: var(--verde); }
+  .btn-eliminar { background: var(--rojo-fondo); color: var(--rojo); }
+
+  @media (prefers-color-scheme: dark) {
+    .btn-google { background: #2b1d05; color: #ffb74d; }
+  }
+
+  .btn-flotante {
+    position: fixed;
+    right: 20px;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primario), var(--primario-oscuro));
+    color: white;
+    font-size: 1.9rem;
+    font-weight: 400;
+    box-shadow: 0 10px 24px rgba(79,70,229,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+  }
+  .btn-flotante:active { transform: scale(0.92); }
+
+  /* Modales */
+  .fondo-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.55);
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 50;
+    backdrop-filter: blur(2px);
+  }
+  .fondo-modal.visible { display: flex; }
+
+  .modal {
+    background: var(--superficie);
+    border-radius: 24px 24px 0 0;
+    padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--sombra-lg);
+    animation: subir 0.28s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes subir { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .agarradera {
+    width: 40px;
+    height: 4px;
+    background: var(--borde);
+    border-radius: 4px;
+    margin: 0 auto 16px;
+  }
+
+  .modal h2 { margin: 0 0 18px; color: var(--texto); font-size: 1.2rem; font-weight: 800; letter-spacing: -0.01em; }
+
+  .campo { margin-bottom: 16px; }
+  .campo label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-bottom: 7px;
+    color: var(--gris);
+  }
+  .campo input, .campo select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--borde);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: var(--fondo);
+    color: var(--texto);
+  }
+  .campo input:focus, .campo select:focus { outline: none; border-color: var(--primario); background: var(--superficie); }
+
+  .sugerencias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .chip-sugerencia {
+    background: var(--primario-claro);
+    color: var(--primario);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: inherit;
+  }
+  .chip-sugerencia:active { transform: scale(0.95); }
+  .chip-sugerencia .veces { opacity: 0.6; font-weight: 600; }
+
+  .tabs-duracion { display: flex; gap: 8px; margin-bottom: 10px; background: var(--fondo); padding: 4px; border-radius: 12px; }
+  .tab-duracion {
+    flex: 1;
+    padding: 9px;
+    text-align: center;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gris);
+  }
+  .tab-duracion.activo { background: var(--superficie); color: var(--primario); box-shadow: var(--sombra); }
+
+  .acciones-modal { display: flex; gap: 10px; margin-top: 22px; }
+  .acciones-modal button { flex: 1; }
+  .btn-cancelar { background: var(--fondo); color: var(--texto); padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .btn-guardar { background: linear-gradient(135deg, var(--primario), var(--primario-oscuro)); color: white; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 6px 16px rgba(79,70,229,0.35); }
+
+  /* Modal de éxito */
+  .modal-exito { text-align: center; }
+  .modal-exito .icono-exito {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--verde-fondo); color: var(--verde);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; margin: 0 auto 14px;
+  }
+  .modal-exito h2 { text-align: center; }
+  .modal-exito .resumen-exito {
+    background: var(--fondo);
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 0.85rem;
+    color: var(--gris);
+    margin-bottom: 18px;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .modal-exito .resumen-exito strong { color: var(--texto); }
+  .botones-exito { display: flex; flex-direction: column; gap: 10px; }
+  .btn-alarma {
+    background: var(--primario-claro);
+    color: var(--primario);
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-alarma.google { background: #fff3e0; color: #ef6c00; }
+  @media (prefers-color-scheme: dark) { .btn-alarma.google { background: #2b1d05; color: #ffb74d; } }
+  .btn-listo { background: transparent; color: var(--gris); padding: 12px; border: none; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 0.85rem; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>🤝 A quién se lo presté</h1>
-  <p>Anota qué prestas, a quién y cuándo te lo deben devolver</p>
-</header>
+<div class="app">
+  <header>
+    <div class="fila-header">
+      <div>
+        <h1>🤝 A quién se lo presté</h1>
+        <p>Anota, recuerda y no pierdas más nada</p>
+      </div>
+      <button class="btn-icono" id="btnNotif" title="Notificaciones">🔔</button>
+    </div>
+    <div class="resumen" id="resumen"></div>
+  </header>
 
-<div class="contenedor">
-  <div class="instalar-banner" id="bannerInstalar">
-    <span>📲 Instala esta app en tu celular para tenerla como ícono</span>
-    <button id="btnInstalar">Instalar</button>
-  </div>
+  <main>
+    <div class="instalar-banner" id="bannerInstalar">
+      <span>📲 Instala esta app en tu celular</span>
+      <button id="btnInstalar">Instalar</button>
+    </div>
 
-  <button class="btn-notif" id="btnNotif">🔔 Activar notificaciones en la app</button>
+    <div id="lista"></div>
+  </main>
 
-  <div id="lista"></div>
+  <button class="btn-flotante" id="btnNuevo">+</button>
 </div>
-
-<button class="btn-flotante" id="btnNuevo">+</button>
 
 <div class="fondo-modal" id="fondoModal">
   <div class="modal">
+    <div class="agarradera"></div>
     <h2>Nuevo préstamo</h2>
     <form id="formPrestamo">
       <div class="campo">
         <label for="objeto">¿Qué prestas?</label>
-        <input type="text" id="objeto" placeholder="Ej: Taladro, libro, $500..." required>
+        <input type="text" id="objeto" placeholder="Ej: Taladro, libro, plata..." required autocomplete="off">
+        <div class="sugerencias" id="sugerenciasObjeto"></div>
       </div>
 
       <div class="campo">
         <label for="persona">¿A quién se lo prestas?</label>
-        <input type="text" id="persona" placeholder="Ej: Juan Pérez" required>
+        <input type="text" id="persona" placeholder="Ej: Juan Pérez" required autocomplete="off">
       </div>
 
       <div class="campo">
@@ -289,12 +494,29 @@
   </div>
 </div>
 
+<div class="fondo-modal" id="fondoExito">
+  <div class="modal modal-exito">
+    <div class="agarradera"></div>
+    <div class="icono-exito">✅</div>
+    <h2>¡Préstamo guardado!</h2>
+    <div class="resumen-exito" id="resumenExito"></div>
+    <div class="botones-exito">
+      <button class="btn-alarma" id="btnAlarmaExito">📅 Agregar alarma al calendario</button>
+      <button class="btn-alarma google" id="btnGoogleExito">🗓️ Agregar a Google Calendar</button>
+      <button class="btn-listo" id="btnCerrarExito">Listo, cerrar</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const CLAVE = 'prestamos-app-datos';
   let prestamos = JSON.parse(localStorage.getItem(CLAVE) || '[]');
+  let idExito = null;
 
   const lista = document.getElementById('lista');
+  const resumen = document.getElementById('resumen');
   const fondoModal = document.getElementById('fondoModal');
+  const fondoExito = document.getElementById('fondoExito');
   const form = document.getElementById('formPrestamo');
   const btnNotif = document.getElementById('btnNotif');
 
@@ -312,7 +534,8 @@
     return 'ok';
   }
 
-  const textoEstado = { ok: '✅ En plazo', pronto: '⏰ Vence pronto', vencido: '⚠️ Vencido', devuelto: '✔️ Devuelto' };
+  const textoEstado = { ok: 'En plazo', pronto: 'Vence pronto', vencido: 'Vencido', devuelto: 'Devuelto' };
+  const iconoEstado = { ok: '✅', pronto: '⏰', vencido: '⚠️', devuelto: '✔️' };
 
   function escapar(str) {
     const d = document.createElement('div');
@@ -320,12 +543,36 @@
     return d.innerHTML;
   }
 
+  // ---- Sugerencias de objetos frecuentes ----
+  function obtenerSugerencias() {
+    const conteo = {};
+    prestamos.forEach(p => {
+      const clave = p.objeto.trim().toLowerCase();
+      if (!clave) return;
+      if (!conteo[clave]) conteo[clave] = { texto: p.objeto.trim(), veces: 0 };
+      conteo[clave].veces++;
+    });
+    return Object.values(conteo).filter(x => x.veces >= 2).sort((a, b) => b.veces - a.veces).slice(0, 6);
+  }
+
+  function renderSugerencias() {
+    const cont = document.getElementById('sugerenciasObjeto');
+    const sugerencias = obtenerSugerencias();
+    if (sugerencias.length === 0) { cont.innerHTML = ''; return; }
+    cont.innerHTML = sugerencias.map(s =>
+      `<button type="button" class="chip-sugerencia" data-texto="${escapar(s.texto)}">${escapar(s.texto)} <span class="veces">×${s.veces}</span></button>`
+    ).join('');
+    cont.querySelectorAll('.chip-sugerencia').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('objeto').value = btn.dataset.texto;
+        document.getElementById('objeto').focus();
+      });
+    });
+  }
+
   // ---- Generación de evento de calendario (.ics) ----
   function pad(n) { return n.toString().padStart(2, '0'); }
-
-  function formatoICS(fecha, hora) {
-    return `${fecha.getFullYear()}${pad(fecha.getMonth()+1)}${pad(fecha.getDate())}T${hora}00`;
-  }
+  function formatoICS(fecha, hora) { return `${fecha.getFullYear()}${pad(fecha.getMonth()+1)}${pad(fecha.getDate())}T${hora}00`; }
 
   function generarICS(p) {
     const inicio = parseFecha(p.fechaDevolucion);
@@ -336,7 +583,7 @@
     const dtstamp = `${ahora.getUTCFullYear()}${pad(ahora.getUTCMonth()+1)}${pad(ahora.getUTCDate())}T${pad(ahora.getUTCHours())}${pad(ahora.getUTCMinutes())}${pad(ahora.getUTCSeconds())}Z`;
     const trigger = p.recordatorioDias > 0 ? `-P${p.recordatorioDias}D` : 'PT0S';
 
-    const contenido = [
+    return [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//AQuienSeLoPreste//ES',
@@ -355,23 +602,17 @@
       'END:VEVENT',
       'END:VCALENDAR'
     ].join('\r\n');
-
-    return contenido;
   }
 
-  window.descargarICS = function(id) {
+  // Se abre directamente vía data URI (no Blob): en apps instaladas (PWA) en el
+  // celular, las descargas por Blob suelen fallar en silencio; data: sí dispara
+  // la pantalla nativa de "Agregar evento" tanto en iOS como en Android.
+  window.agregarAlarma = function(id) {
     const p = prestamos.find(x => x.id === id);
     if (!p) return;
     const contenido = generarICS(p);
-    const blob = new Blob([contenido], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `recordatorio-${p.objeto.replace(/[^a-z0-9]/gi, '_')}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    const uri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(contenido);
+    window.open(uri, '_blank');
   };
 
   window.abrirGoogleCalendar = function(id) {
@@ -389,6 +630,15 @@
 
   function render() {
     lista.innerHTML = '';
+
+    const activos = prestamos.filter(p => !p.devuelto);
+    const vencidos = activos.filter(p => calcularEstado(p) === 'vencido').length;
+    const pronto = activos.filter(p => calcularEstado(p) === 'pronto').length;
+    resumen.innerHTML = `
+      <div class="chip-resumen">🤝 <b>${activos.length}</b> activos</div>
+      ${pronto ? `<div class="chip-resumen">⏰ <b>${pronto}</b> por vencer</div>` : ''}
+      ${vencidos ? `<div class="chip-resumen">⚠️ <b>${vencidos}</b> vencidos</div>` : ''}
+    `;
 
     if (prestamos.length === 0) {
       lista.innerHTML = `
@@ -410,15 +660,17 @@
       div.className = 'tarjeta-prestamo ' + estado;
       div.innerHTML = `
         <div class="info-prestamo">
-          <p class="objeto">${escapar(p.objeto)}</p>
-          <p class="detalle">A: <strong>${escapar(p.persona)}</strong><br>Prestado: ${formatoFecha(parseFecha(p.fechaPrestamo))} · Devolver: ${formatoFecha(parseFecha(p.fechaDevolucion))}</p>
-          <span class="estado ${estado}">${textoEstado[estado]}</span>
+          <div>
+            <p class="objeto">${escapar(p.objeto)}</p>
+            <p class="detalle">A <strong>${escapar(p.persona)}</strong> · Prestado ${formatoFecha(parseFecha(p.fechaPrestamo))}<br>Devolver: <strong>${formatoFecha(parseFecha(p.fechaDevolucion))}</strong></p>
+          </div>
+          <span class="estado ${estado}">${iconoEstado[estado]} ${textoEstado[estado]}</span>
         </div>
-        <div class="botones-tarjeta">
-          ${!p.devuelto ? `<button class="btn-mini btn-calendario" onclick="descargarICS('${p.id}')">📅 Alarma (.ics)</button>` : ''}
-          ${!p.devuelto ? `<button class="btn-mini btn-google" onclick="abrirGoogleCalendar('${p.id}')">🗓️ Google Cal.</button>` : ''}
-          ${!p.devuelto ? `<button class="btn-mini btn-devolver" onclick="marcarDevuelto('${p.id}')">✔️ Devuelto</button>` : ''}
-          <button class="btn-mini btn-eliminar" onclick="eliminar('${p.id}')">🗑️ Eliminar</button>
+        <div class="botones-tarjeta ${p.devuelto ? 'devuelto' : ''}">
+          ${!p.devuelto ? `<button class="btn-mini btn-calendario" onclick="agregarAlarma('${p.id}')"><span class="ico">📅</span>Alarma</button>` : ''}
+          ${!p.devuelto ? `<button class="btn-mini btn-google" onclick="abrirGoogleCalendar('${p.id}')"><span class="ico">🗓️</span>Google</button>` : ''}
+          ${!p.devuelto ? `<button class="btn-mini btn-devolver" onclick="marcarDevuelto('${p.id}')"><span class="ico">✔️</span>Devuelto</button>` : ''}
+          <button class="btn-mini btn-eliminar" onclick="eliminar('${p.id}')"><span class="ico">🗑️</span>Eliminar</button>
         </div>
       `;
       lista.appendChild(div);
@@ -437,7 +689,7 @@
     render();
   };
 
-  // ---- Modal ----
+  // ---- Modal nuevo préstamo ----
   const btnNuevo = document.getElementById('btnNuevo');
   const btnCancelar = document.getElementById('btnCancelar');
   const fechaPrestamoInput = document.getElementById('fechaPrestamo');
@@ -454,6 +706,7 @@
     tabsDuracion.forEach(t => t.classList.toggle('activo', t.dataset.modo === 'dias'));
     campoDias.style.display = 'block';
     campoFecha.style.display = 'none';
+    renderSugerencias();
     fondoModal.classList.add('visible');
   }
   function cerrarModal() { fondoModal.classList.remove('visible'); }
@@ -470,8 +723,6 @@
       campoFecha.style.display = modoDuracion === 'fecha' ? 'block' : 'none';
     });
   });
-
-  let ultimoIdGuardado = null;
 
   form.addEventListener('submit', e => {
     e.preventDefault();
@@ -493,40 +744,36 @@
     }
 
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prestamos.push({
-      id, objeto, persona, fechaPrestamo, fechaDevolucion,
-      recordatorioDias, devuelto: false, ultimaNotificacion: null
-    });
+    prestamos.push({ id, objeto, persona, fechaPrestamo, fechaDevolucion, recordatorioDias, devuelto: false, ultimaNotificacion: null });
 
     guardar();
     render();
     cerrarModal();
-    ultimoIdGuardado = id;
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().then(actualizarBotonNotif);
     }
 
-    setTimeout(() => {
-      if (confirm('Préstamo guardado. ¿Quieres agregar la alarma a tu calendario ahora?')) {
-        descargarICS(id);
-      }
-    }, 250);
+    idExito = id;
+    document.getElementById('resumenExito').innerHTML =
+      `<strong>${escapar(objeto)}</strong> prestado a <strong>${escapar(persona)}</strong><br>Devolver antes del <strong>${formatoFecha(parseFecha(fechaDevolucion))}</strong>`;
+    fondoExito.classList.add('visible');
   });
+
+  document.getElementById('btnAlarmaExito').addEventListener('click', () => { if (idExito) agregarAlarma(idExito); });
+  document.getElementById('btnGoogleExito').addEventListener('click', () => { if (idExito) abrirGoogleCalendar(idExito); });
+  document.getElementById('btnCerrarExito').addEventListener('click', () => { fondoExito.classList.remove('visible'); idExito = null; });
+  fondoExito.addEventListener('click', e => { if (e.target === fondoExito) { fondoExito.classList.remove('visible'); idExito = null; } });
 
   // ---- Notificaciones dentro de la app (complemento a la del calendario) ----
   function actualizarBotonNotif() {
-    if (!('Notification' in window)) {
-      btnNotif.textContent = '🔕 Notificaciones no disponibles en este navegador';
-      btnNotif.disabled = true;
-      return;
-    }
+    if (!('Notification' in window)) { btnNotif.style.display = 'none'; return; }
     if (Notification.permission === 'granted') {
-      btnNotif.textContent = '🔔 Notificaciones activas en la app';
       btnNotif.classList.add('activo');
+      btnNotif.title = 'Notificaciones activas';
     } else {
-      btnNotif.textContent = '🔔 Activar notificaciones en la app';
       btnNotif.classList.remove('activo');
+      btnNotif.title = 'Activar notificaciones';
     }
   }
 
@@ -574,9 +821,7 @@
     bannerInstalar.classList.remove('visible');
   });
 
-  window.addEventListener('appinstalled', () => {
-    bannerInstalar.classList.remove('visible');
-  });
+  window.addEventListener('appinstalled', () => bannerInstalar.classList.remove('visible'));
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
