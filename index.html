@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A quién se lo presté</title>
+<meta name="theme-color" content="#1565c0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Préstamos">
+<style>
+  :root {
+    --azul: #1565c0;
+    --azul-oscuro: #0d47a1;
+    --verde: #43a047;
+    --amarillo: #ffb300;
+    --rojo: #e53935;
+    --gris-fondo: #f2f4f7;
+    --gris-texto: #37474f;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: var(--gris-fondo);
+    color: var(--gris-texto);
+    min-height: 100vh;
+    overscroll-behavior-y: contain;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--azul), var(--azul-oscuro));
+    color: white;
+    padding: calc(20px + env(safe-area-inset-top)) 20px 22px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  header h1 { margin: 0; font-size: 1.4rem; }
+  header p { margin: 6px 0 0; opacity: 0.9; font-size: 0.82rem; }
+
+  .contenedor {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 18px 14px 100px;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px 18px;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+    font-family: inherit;
+  }
+  button:active { transform: scale(0.96); }
+
+  .btn-flotante {
+    position: fixed;
+    right: 20px;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--azul);
+    color: white;
+    font-size: 1.8rem;
+    box-shadow: 0 6px 16px rgba(21,101,192,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+  }
+
+  .btn-notif {
+    display: block;
+    width: 100%;
+    background: white;
+    color: var(--azul);
+    border: 2px solid var(--azul);
+    margin-bottom: 16px;
+  }
+  .btn-notif.activo { background: var(--verde); color: white; border-color: var(--verde); }
+
+  /* Modal */
+  .fondo-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 50;
+  }
+  .fondo-modal.visible { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 22px calc(24px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 480px;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+    animation: subir 0.25s ease-out;
+  }
+  @keyframes subir { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal h2 { margin-top: 0; color: var(--azul-oscuro); font-size: 1.3rem; }
+
+  .campo { margin-bottom: 16px; }
+  .campo label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+  .campo input, .campo select {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid #cfd8dc;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  .campo input:focus, .campo select:focus { outline: none; border-color: var(--azul); }
+
+  .tabs-duracion { display: flex; gap: 8px; margin-bottom: 10px; }
+  .tab-duracion {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    border: 1.5px solid #cfd8dc;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #78909c;
+  }
+  .tab-duracion.activo { border-color: var(--azul); background: #e3f2fd; color: var(--azul); }
+
+  .acciones-modal { display: flex; gap: 10px; margin-top: 20px; }
+  .acciones-modal button { flex: 1; }
+  .btn-cancelar { background: #eceff1; color: var(--gris-texto); }
+  .btn-guardar { background: var(--azul); color: white; }
+
+  .vacio { text-align: center; padding: 60px 20px; color: #90a4ae; }
+  .vacio .icono { font-size: 3rem; display: block; margin-bottom: 10px; }
+
+  .tarjeta-prestamo {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 6px solid var(--verde);
+  }
+  .tarjeta-prestamo.pronto { border-left-color: var(--amarillo); }
+  .tarjeta-prestamo.vencido { border-left-color: var(--rojo); }
+  .tarjeta-prestamo.devuelto { border-left-color: #b0bec5; opacity: 0.6; }
+
+  .info-prestamo .objeto { font-size: 1.05rem; font-weight: 700; margin: 0; }
+  .info-prestamo .detalle { font-size: 0.82rem; color: #607d8b; margin: 4px 0 0; }
+  .estado {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top: 8px;
+  }
+  .estado.ok { background: #e8f5e9; color: var(--verde); }
+  .estado.pronto { background: #fff8e1; color: #ff8f00; }
+  .estado.vencido { background: #ffebee; color: var(--rojo); }
+  .estado.devuelto { background: #eceff1; color: #78909c; }
+
+  .botones-tarjeta {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .btn-mini {
+    padding: 9px 12px;
+    font-size: 0.78rem;
+    border-radius: 8px;
+    flex: 1;
+    min-width: 90px;
+  }
+  .btn-calendario { background: #e3f2fd; color: var(--azul); }
+  .btn-google { background: #fff3e0; color: #ef6c00; }
+  .btn-devolver { background: var(--verde); color: white; }
+  .btn-eliminar { background: #ffebee; color: var(--rojo); }
+
+  .instalar-banner {
+    background: #fff8e1;
+    border: 1.5px solid var(--amarillo);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .instalar-banner.visible { display: flex; }
+  .instalar-banner button { background: var(--amarillo); color: #4a3600; padding: 8px 12px; font-size: 0.78rem; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🤝 A quién se lo presté</h1>
+  <p>Anota qué prestas, a quién y cuándo te lo deben devolver</p>
+</header>
+
+<div class="contenedor">
+  <div class="instalar-banner" id="bannerInstalar">
+    <span>📲 Instala esta app en tu celular para tenerla como ícono</span>
+    <button id="btnInstalar">Instalar</button>
+  </div>
+
+  <button class="btn-notif" id="btnNotif">🔔 Activar notificaciones en la app</button>
+
+  <div id="lista"></div>
+</div>
+
+<button class="btn-flotante" id="btnNuevo">+</button>
+
+<div class="fondo-modal" id="fondoModal">
+  <div class="modal">
+    <h2>Nuevo préstamo</h2>
+    <form id="formPrestamo">
+      <div class="campo">
+        <label for="objeto">¿Qué prestas?</label>
+        <input type="text" id="objeto" placeholder="Ej: Taladro, libro, $500..." required>
+      </div>
+
+      <div class="campo">
+        <label for="persona">¿A quién se lo prestas?</label>
+        <input type="text" id="persona" placeholder="Ej: Juan Pérez" required>
+      </div>
+
+      <div class="campo">
+        <label for="fechaPrestamo">Fecha del préstamo</label>
+        <input type="date" id="fechaPrestamo" required>
+      </div>
+
+      <div class="campo">
+        <label>¿Por cuánto tiempo?</label>
+        <div class="tabs-duracion">
+          <div class="tab-duracion activo" data-modo="dias">En días</div>
+          <div class="tab-duracion" data-modo="fecha">Fecha exacta</div>
+        </div>
+        <div id="campoDias">
+          <input type="number" id="dias" min="1" value="7" placeholder="Número de días">
+        </div>
+        <div id="campoFecha" style="display:none;">
+          <input type="date" id="fechaDevolucion">
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="recordatorio">Recordarme</label>
+        <select id="recordatorio">
+          <option value="0">El mismo día de la devolución</option>
+          <option value="1" selected>1 día antes</option>
+          <option value="3">3 días antes</option>
+          <option value="7">7 días antes</option>
+        </select>
+      </div>
+
+      <div class="acciones-modal">
+        <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
+        <button type="submit" class="btn-guardar">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const CLAVE = 'prestamos-app-datos';
+  let prestamos = JSON.parse(localStorage.getItem(CLAVE) || '[]');
+
+  const lista = document.getElementById('lista');
+  const fondoModal = document.getElementById('fondoModal');
+  const form = document.getElementById('formPrestamo');
+  const btnNotif = document.getElementById('btnNotif');
+
+  function guardar() { localStorage.setItem(CLAVE, JSON.stringify(prestamos)); }
+  function hoy() { const d = new Date(); d.setHours(0,0,0,0); return d; }
+  function parseFecha(str) { return new Date(str + 'T00:00:00'); }
+  function formatoFecha(d) { return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }); }
+  function diasEntre(a, b) { return Math.round((b - a) / (1000 * 60 * 60 * 24)); }
+
+  function calcularEstado(p) {
+    if (p.devuelto) return 'devuelto';
+    const dias = diasEntre(hoy(), parseFecha(p.fechaDevolucion));
+    if (dias < 0) return 'vencido';
+    if (dias <= p.recordatorioDias) return 'pronto';
+    return 'ok';
+  }
+
+  const textoEstado = { ok: '✅ En plazo', pronto: '⏰ Vence pronto', vencido: '⚠️ Vencido', devuelto: '✔️ Devuelto' };
+
+  function escapar(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ---- Generación de evento de calendario (.ics) ----
+  function pad(n) { return n.toString().padStart(2, '0'); }
+
+  function formatoICS(fecha, hora) {
+    return `${fecha.getFullYear()}${pad(fecha.getMonth()+1)}${pad(fecha.getDate())}T${hora}00`;
+  }
+
+  function generarICS(p) {
+    const inicio = parseFecha(p.fechaDevolucion);
+    const fin = new Date(inicio);
+    const dtstart = formatoICS(inicio, '090000');
+    const dtend = formatoICS(fin, '093000');
+    const ahora = new Date();
+    const dtstamp = `${ahora.getUTCFullYear()}${pad(ahora.getUTCMonth()+1)}${pad(ahora.getUTCDate())}T${pad(ahora.getUTCHours())}${pad(ahora.getUTCMinutes())}${pad(ahora.getUTCSeconds())}Z`;
+    const trigger = p.recordatorioDias > 0 ? `-P${p.recordatorioDias}D` : 'PT0S';
+
+    const contenido = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//AQuienSeLoPreste//ES',
+      'BEGIN:VEVENT',
+      `UID:${p.id}@aquienseloprestre`,
+      `DTSTAMP:${dtstamp}`,
+      `DTSTART:${dtstart}`,
+      `DTEND:${dtend}`,
+      `SUMMARY:Devolver: ${p.objeto} (${p.persona})`,
+      `DESCRIPTION:Prestado el ${p.fechaPrestamo} a ${p.persona}. Recuerda pedir de vuelta: ${p.objeto}.`,
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Recordatorio de devolución',
+      `TRIGGER:${trigger}`,
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    return contenido;
+  }
+
+  window.descargarICS = function(id) {
+    const p = prestamos.find(x => x.id === id);
+    if (!p) return;
+    const contenido = generarICS(p);
+    const blob = new Blob([contenido], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recordatorio-${p.objeto.replace(/[^a-z0-9]/gi, '_')}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  };
+
+  window.abrirGoogleCalendar = function(id) {
+    const p = prestamos.find(x => x.id === id);
+    if (!p) return;
+    const inicio = parseFecha(p.fechaDevolucion);
+    const fin = new Date(inicio);
+    fin.setDate(fin.getDate() + 1);
+    const fmt = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+    const texto = encodeURIComponent(`Devolver: ${p.objeto} (${p.persona})`);
+    const detalles = encodeURIComponent(`Prestado el ${p.fechaPrestamo} a ${p.persona}. Recuerda pedir de vuelta: ${p.objeto}.`);
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${texto}&dates=${fmt(inicio)}/${fmt(fin)}&details=${detalles}`;
+    window.open(url, '_blank');
+  };
+
+  function render() {
+    lista.innerHTML = '';
+
+    if (prestamos.length === 0) {
+      lista.innerHTML = `
+        <div class="vacio">
+          <span class="icono">🤝</span>
+          <p>No tienes préstamos anotados todavía.<br>Toca el botón "+" para agregar el primero.</p>
+        </div>`;
+      return;
+    }
+
+    const ordenados = [...prestamos].sort((a, b) => {
+      if (a.devuelto !== b.devuelto) return a.devuelto ? 1 : -1;
+      return parseFecha(a.fechaDevolucion) - parseFecha(b.fechaDevolucion);
+    });
+
+    ordenados.forEach(p => {
+      const estado = calcularEstado(p);
+      const div = document.createElement('div');
+      div.className = 'tarjeta-prestamo ' + estado;
+      div.innerHTML = `
+        <div class="info-prestamo">
+          <p class="objeto">${escapar(p.objeto)}</p>
+          <p class="detalle">A: <strong>${escapar(p.persona)}</strong><br>Prestado: ${formatoFecha(parseFecha(p.fechaPrestamo))} · Devolver: ${formatoFecha(parseFecha(p.fechaDevolucion))}</p>
+          <span class="estado ${estado}">${textoEstado[estado]}</span>
+        </div>
+        <div class="botones-tarjeta">
+          ${!p.devuelto ? `<button class="btn-mini btn-calendario" onclick="descargarICS('${p.id}')">📅 Alarma (.ics)</button>` : ''}
+          ${!p.devuelto ? `<button class="btn-mini btn-google" onclick="abrirGoogleCalendar('${p.id}')">🗓️ Google Cal.</button>` : ''}
+          ${!p.devuelto ? `<button class="btn-mini btn-devolver" onclick="marcarDevuelto('${p.id}')">✔️ Devuelto</button>` : ''}
+          <button class="btn-mini btn-eliminar" onclick="eliminar('${p.id}')">🗑️ Eliminar</button>
+        </div>
+      `;
+      lista.appendChild(div);
+    });
+  }
+
+  window.marcarDevuelto = function(id) {
+    const p = prestamos.find(x => x.id === id);
+    if (p) { p.devuelto = true; guardar(); render(); }
+  };
+
+  window.eliminar = function(id) {
+    if (!confirm('¿Eliminar este préstamo?')) return;
+    prestamos = prestamos.filter(x => x.id !== id);
+    guardar();
+    render();
+  };
+
+  // ---- Modal ----
+  const btnNuevo = document.getElementById('btnNuevo');
+  const btnCancelar = document.getElementById('btnCancelar');
+  const fechaPrestamoInput = document.getElementById('fechaPrestamo');
+  const tabsDuracion = document.querySelectorAll('.tab-duracion');
+  const campoDias = document.getElementById('campoDias');
+  const campoFecha = document.getElementById('campoFecha');
+  let modoDuracion = 'dias';
+
+  function abrirModal() {
+    form.reset();
+    fechaPrestamoInput.value = new Date().toISOString().slice(0, 10);
+    document.getElementById('dias').value = 7;
+    modoDuracion = 'dias';
+    tabsDuracion.forEach(t => t.classList.toggle('activo', t.dataset.modo === 'dias'));
+    campoDias.style.display = 'block';
+    campoFecha.style.display = 'none';
+    fondoModal.classList.add('visible');
+  }
+  function cerrarModal() { fondoModal.classList.remove('visible'); }
+
+  btnNuevo.addEventListener('click', abrirModal);
+  btnCancelar.addEventListener('click', cerrarModal);
+  fondoModal.addEventListener('click', e => { if (e.target === fondoModal) cerrarModal(); });
+
+  tabsDuracion.forEach(tab => {
+    tab.addEventListener('click', () => {
+      modoDuracion = tab.dataset.modo;
+      tabsDuracion.forEach(t => t.classList.toggle('activo', t === tab));
+      campoDias.style.display = modoDuracion === 'dias' ? 'block' : 'none';
+      campoFecha.style.display = modoDuracion === 'fecha' ? 'block' : 'none';
+    });
+  });
+
+  let ultimoIdGuardado = null;
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const objeto = document.getElementById('objeto').value.trim();
+    const persona = document.getElementById('persona').value.trim();
+    const fechaPrestamo = fechaPrestamoInput.value;
+    const recordatorioDias = parseInt(document.getElementById('recordatorio').value, 10);
+
+    let fechaDevolucion;
+    if (modoDuracion === 'dias') {
+      const dias = parseInt(document.getElementById('dias').value, 10) || 1;
+      const d = parseFecha(fechaPrestamo);
+      d.setDate(d.getDate() + dias);
+      fechaDevolucion = d.toISOString().slice(0, 10);
+    } else {
+      fechaDevolucion = document.getElementById('fechaDevolucion').value;
+      if (!fechaDevolucion) { alert('Elige una fecha de devolución.'); return; }
+    }
+
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    prestamos.push({
+      id, objeto, persona, fechaPrestamo, fechaDevolucion,
+      recordatorioDias, devuelto: false, ultimaNotificacion: null
+    });
+
+    guardar();
+    render();
+    cerrarModal();
+    ultimoIdGuardado = id;
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(actualizarBotonNotif);
+    }
+
+    setTimeout(() => {
+      if (confirm('Préstamo guardado. ¿Quieres agregar la alarma a tu calendario ahora?')) {
+        descargarICS(id);
+      }
+    }, 250);
+  });
+
+  // ---- Notificaciones dentro de la app (complemento a la del calendario) ----
+  function actualizarBotonNotif() {
+    if (!('Notification' in window)) {
+      btnNotif.textContent = '🔕 Notificaciones no disponibles en este navegador';
+      btnNotif.disabled = true;
+      return;
+    }
+    if (Notification.permission === 'granted') {
+      btnNotif.textContent = '🔔 Notificaciones activas en la app';
+      btnNotif.classList.add('activo');
+    } else {
+      btnNotif.textContent = '🔔 Activar notificaciones en la app';
+      btnNotif.classList.remove('activo');
+    }
+  }
+
+  btnNotif.addEventListener('click', () => {
+    if (!('Notification' in window)) return;
+    Notification.requestPermission().then(actualizarBotonNotif);
+  });
+
+  function revisarRecordatorios() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const hoyStr = hoy().toISOString().slice(0, 10);
+    let cambios = false;
+
+    prestamos.forEach(p => {
+      if (p.devuelto) return;
+      const estado = calcularEstado(p);
+      if ((estado === 'pronto' || estado === 'vencido') && p.ultimaNotificacion !== hoyStr) {
+        const titulo = estado === 'vencido' ? '⚠️ Préstamo vencido' : '⏰ Préstamo por vencer';
+        const cuerpo = `"${p.objeto}" prestado a ${p.persona} — devolución: ${formatoFecha(parseFecha(p.fechaDevolucion))}`;
+        new Notification(titulo, { body: cuerpo });
+        p.ultimaNotificacion = hoyStr;
+        cambios = true;
+      }
+    });
+
+    if (cambios) guardar();
+  }
+
+  // ---- Instalación como app (PWA) ----
+  let eventoInstalacion = null;
+  const bannerInstalar = document.getElementById('bannerInstalar');
+  const btnInstalar = document.getElementById('btnInstalar');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    eventoInstalacion = e;
+    bannerInstalar.classList.add('visible');
+  });
+
+  btnInstalar.addEventListener('click', async () => {
+    if (!eventoInstalacion) return;
+    eventoInstalacion.prompt();
+    await eventoInstalacion.userChoice;
+    eventoInstalacion = null;
+    bannerInstalar.classList.remove('visible');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    bannerInstalar.classList.remove('visible');
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    });
+  }
+
+  actualizarBotonNotif();
+  render();
+  revisarRecordatorios();
+  setInterval(revisarRecordatorios, 60000);
+</script>
+
+</body>
+</html>

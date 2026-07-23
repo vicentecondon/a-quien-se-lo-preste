@@ -1,0 +1,19 @@
+{
+  "name": "A quién se lo presté",
+  "short_name": "Préstamos",
+  "description": "Anota qué prestas, a quién y cuándo te lo deben devolver",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1565c0",
+  "theme_color": "#1565c0",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
