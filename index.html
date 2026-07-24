@@ -647,6 +647,14 @@
   // archivo armado solo en la memoria del navegador (data:/blob:). Por eso este
   // sí funciona de forma confiable en el Calendario nativo de iPhone.
   const API_EVENTO = 'https://a-quien-se-lo-preste.vercel.app/api/evento';
+  // En una PWA instalada (pantalla de inicio) Safari no tiene barra de
+  // navegación ni gestor de descargas, y falla con "Safari no puede
+  // descargar este archivo" al tocar un link https a un .ics. webcal:// lo
+  // esquiva porque iOS lo intercepta a nivel de sistema (igual que tel:/mailto:)
+  // y lo entrega directo a Calendario, sin pasar por Safari.
+  const enStandalone = (typeof navigator !== 'undefined' && navigator.standalone === true)
+    || (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  const API_EVENTO_LINK = enStandalone ? API_EVENTO.replace(/^https:\/\//, 'webcal://') : API_EVENTO;
   function generarDataURI(p) {
     const params = new URLSearchParams({
       objeto: p.objeto,
@@ -656,7 +664,7 @@
       recordatorioDias: p.recordatorioDias,
       id: p.id
     });
-    return `${API_EVENTO}?${params.toString()}`;
+    return `${API_EVENTO_LINK}?${params.toString()}`;
   }
 
   function generarUrlGoogle(p) {
