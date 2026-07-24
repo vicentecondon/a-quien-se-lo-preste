@@ -674,13 +674,14 @@
     ].join('\r\n');
   }
 
-  // Los botones son enlaces <a> reales (no botones con JS): un toque genuino del
-  // usuario sobre un href="data:..." es lo único que Safari deja pasar de forma
-  // confiable para abrir la hoja nativa de "Agregar evento" — si el script arma
-  // la navegación (window.open, location.href), Safari la bloquea por seguridad.
+  // Los botones son enlaces <a> reales (no botones con JS). Usamos blob: en vez de
+  // data: porque Safari bloquea por seguridad la navegación de nivel superior a
+  // data: (política antiphishing), pero blob: sí se trata como un recurso real con
+  // su propio tipo de contenido y puede abrir la hoja nativa de "Agregar evento".
   function generarDataURI(p) {
     const contenido = generarICS(p);
-    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(contenido);
+    const blob = new Blob([contenido], { type: 'text/calendar' });
+    return URL.createObjectURL(blob);
   }
 
   function generarUrlGoogle(p) {
