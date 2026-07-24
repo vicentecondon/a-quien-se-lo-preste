@@ -673,15 +673,17 @@
     ].join('\r\n');
   }
 
-  // Se abre directamente vía data URI (no Blob): en apps instaladas (PWA) en el
-  // celular, las descargas por Blob suelen fallar en silencio; data: sí dispara
-  // la pantalla nativa de "Agregar evento" tanto en iOS como en Android.
+  // Navega en la MISMA ventana (no window.open): dentro de una app instalada (PWA)
+  // en iPhone, abrir un data: URI en una ventana nueva muestra una vista previa en
+  // blanco que no sabe interpretar el calendario. Navegando en la misma ventana,
+  // iOS intercepta el contenido antes de navegar y abre la hoja nativa de
+  // "Agregar evento" sin salir de la app. En Android dispara la descarga del .ics.
   window.agregarAlarma = function(id) {
     const p = prestamos.find(x => x.id === id);
     if (!p) return;
     const contenido = generarICS(p);
     const uri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(contenido);
-    window.open(uri, '_blank');
+    window.location.href = uri;
   };
 
   window.abrirGoogleCalendar = function(id) {
