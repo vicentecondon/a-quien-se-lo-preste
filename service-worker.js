@@ -1,4 +1,4 @@
-const CACHE = 'a-quien-se-lo-preste-v5';
+const CACHE = 'a-quien-se-lo-preste-v6';
 const ARCHIVOS = [
   './',
   './index.html',
