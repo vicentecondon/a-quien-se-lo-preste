@@ -122,6 +122,7 @@
   }
   .btn-icono:active { transform: scale(0.92); }
   .btn-icono.activo { background: var(--verde); }
+  .acciones-header { display: flex; gap: 8px; }
 
   .resumen {
     display: flex;
@@ -413,6 +414,42 @@
   .btn-alarma.google { background: #fff3e0; color: #ef6c00; }
   @media (prefers-color-scheme: dark) { .btn-alarma.google { background: #2b1d05; color: #ffb74d; } }
   .btn-listo { background: transparent; color: var(--gris); padding: 12px; border: none; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 0.85rem; }
+
+  /* Modal tutorial */
+  .modal-tutorial .paso {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .modal-tutorial .numero {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--primario-claro);
+    color: var(--primario);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.95rem;
+    flex: none;
+  }
+  .modal-tutorial .paso h3 { margin: 0 0 4px; font-size: 0.92rem; font-weight: 700; }
+  .modal-tutorial .paso p { margin: 0; font-size: 0.82rem; color: var(--gris); line-height: 1.5; }
+  .btn-entendido {
+    background: linear-gradient(135deg, var(--primario), var(--primario-oscuro));
+    color: white;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+    margin-top: 6px;
+    box-shadow: 0 6px 16px rgba(79,70,229,0.35);
+  }
 </style>
 </head>
 <body>
@@ -424,7 +461,10 @@
         <h1>🤝 A quién se lo presté</h1>
         <p>Anota, recuerda y no pierdas más nada</p>
       </div>
-      <button class="btn-icono" id="btnNotif" title="Notificaciones">🔔</button>
+      <div class="acciones-header">
+        <button class="btn-icono" id="btnAyuda" title="Cómo funciona">❓</button>
+        <button class="btn-icono" id="btnNotif" title="Notificaciones">🔔</button>
+      </div>
     </div>
     <div class="resumen" id="resumen"></div>
   </header>
@@ -501,10 +541,39 @@
     <h2>¡Préstamo guardado!</h2>
     <div class="resumen-exito" id="resumenExito"></div>
     <div class="botones-exito">
-      <button class="btn-alarma" id="btnAlarmaExito">📅 Agregar alarma al calendario</button>
-      <button class="btn-alarma google" id="btnGoogleExito">🗓️ Agregar a Google Calendar</button>
+      <button class="btn-alarma" id="btnAlarmaExito">📅 Añadir a Calendario (iPhone)</button>
+      <button class="btn-alarma google" id="btnGoogleExito">🗓️ Añadir a Calendario (Android)</button>
       <button class="btn-listo" id="btnCerrarExito">Listo, cerrar</button>
     </div>
+  </div>
+</div>
+
+<div class="fondo-modal" id="fondoTutorial">
+  <div class="modal modal-tutorial">
+    <div class="agarradera"></div>
+    <h2>🤝 Cómo funciona</h2>
+    <div class="paso">
+      <div class="numero">1</div>
+      <div>
+        <h3>Anota el préstamo</h3>
+        <p>Toca el botón "+" y escribe qué prestas, a quién y por cuánto tiempo.</p>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="numero">2</div>
+      <div>
+        <h3>Agrega la alarma a tu calendario</h3>
+        <p>Toca el botón según tu celular (iPhone o Android): el evento con recordatorio se agrega solo, sin escribir nada de nuevo.</p>
+      </div>
+    </div>
+    <div class="paso">
+      <div class="numero">3</div>
+      <div>
+        <h3>Revisa la lista cuando quieras</h3>
+        <p>Los colores te avisan: verde en plazo, amarillo por vencer pronto, rojo ya vencido.</p>
+      </div>
+    </div>
+    <button class="btn-entendido" id="btnEntendidoTutorial">Entendido, empezar</button>
   </div>
 </div>
 
@@ -667,8 +736,8 @@
           <span class="estado ${estado}">${iconoEstado[estado]} ${textoEstado[estado]}</span>
         </div>
         <div class="botones-tarjeta ${p.devuelto ? 'devuelto' : ''}">
-          ${!p.devuelto ? `<button class="btn-mini btn-calendario" onclick="agregarAlarma('${p.id}')"><span class="ico">📅</span>Alarma</button>` : ''}
-          ${!p.devuelto ? `<button class="btn-mini btn-google" onclick="abrirGoogleCalendar('${p.id}')"><span class="ico">🗓️</span>Google</button>` : ''}
+          ${!p.devuelto ? `<button class="btn-mini btn-calendario" onclick="agregarAlarma('${p.id}')"><span class="ico">📅</span>iPhone</button>` : ''}
+          ${!p.devuelto ? `<button class="btn-mini btn-google" onclick="abrirGoogleCalendar('${p.id}')"><span class="ico">🗓️</span>Android</button>` : ''}
           ${!p.devuelto ? `<button class="btn-mini btn-devolver" onclick="marcarDevuelto('${p.id}')"><span class="ico">✔️</span>Devuelto</button>` : ''}
           <button class="btn-mini btn-eliminar" onclick="eliminar('${p.id}')"><span class="ico">🗑️</span>Eliminar</button>
         </div>
@@ -829,10 +898,27 @@
     });
   }
 
+  // ---- Tutorial rápido (primera vez y bajo demanda) ----
+  const CLAVE_TUTORIAL = 'prestamos-app-tutorial-visto';
+  const fondoTutorial = document.getElementById('fondoTutorial');
+  const btnAyuda = document.getElementById('btnAyuda');
+
+  function abrirTutorial() { fondoTutorial.classList.add('visible'); }
+  function cerrarTutorial() {
+    fondoTutorial.classList.remove('visible');
+    localStorage.setItem(CLAVE_TUTORIAL, '1');
+  }
+
+  btnAyuda.addEventListener('click', abrirTutorial);
+  document.getElementById('btnEntendidoTutorial').addEventListener('click', cerrarTutorial);
+  fondoTutorial.addEventListener('click', e => { if (e.target === fondoTutorial) cerrarTutorial(); });
+
   actualizarBotonNotif();
   render();
   revisarRecordatorios();
   setInterval(revisarRecordatorios, 60000);
+
+  if (!localStorage.getItem(CLAVE_TUTORIAL)) abrirTutorial();
 </script>
 
 </body>
