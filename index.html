@@ -247,6 +247,7 @@
     gap: 3px;
     transition: transform 0.1s ease, filter 0.15s ease;
     font-family: inherit;
+    text-decoration: none;
   }
   .btn-mini:active { transform: scale(0.94); }
   .btn-mini .ico { font-size: 1rem; }
@@ -410,6 +411,7 @@
     cursor: pointer;
     font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-decoration: none;
   }
   .btn-alarma.google { background: #fff3e0; color: #ef6c00; }
   @media (prefers-color-scheme: dark) { .btn-alarma.google { background: #2b1d05; color: #ffb74d; } }
@@ -541,8 +543,8 @@
     <h2>¡Préstamo guardado!</h2>
     <div class="resumen-exito" id="resumenExito"></div>
     <div class="botones-exito">
-      <button class="btn-alarma" id="btnAlarmaExito">📅 Añadir a Calendario (iPhone)</button>
-      <button class="btn-alarma google" id="btnGoogleExito">🗓️ Añadir a Calendario (Android)</button>
+      <a class="btn-alarma" id="btnAlarmaExito" href="#">📅 Añadir a Calendario (iPhone)</a>
+      <a class="btn-alarma google" id="btnGoogleExito" href="#" target="_blank" rel="noopener">🗓️ Añadir a Calendario (Android)</a>
       <button class="btn-listo" id="btnCerrarExito">Listo, cerrar</button>
     </div>
   </div>
@@ -580,7 +582,6 @@
 <script>
   const CLAVE = 'prestamos-app-datos';
   let prestamos = JSON.parse(localStorage.getItem(CLAVE) || '[]');
-  let idExito = null;
 
   const lista = document.getElementById('lista');
   const resumen = document.getElementById('resumen');
@@ -673,61 +674,24 @@
     ].join('\r\n');
   }
 
-  // Safari bloquea por seguridad que un script navegue directo a una URL "data:"
-  // (anti-phishing), así que ni window.open ni location.href funcionan de forma
-  // confiable ahí. En su lugar compartimos el .ics con la API nativa de compartir:
-  // abre el panel de compartir del sistema (iOS/Android) y el usuario elige
-  // "Calendario" o "Google Calendar" ahí mismo, sin salir de la app.
-  function generarArchivoICS(p) {
+  // Los botones son enlaces <a> reales (no botones con JS): un toque genuino del
+  // usuario sobre un href="data:..." es lo único que Safari deja pasar de forma
+  // confiable para abrir la hoja nativa de "Agregar evento" — si el script arma
+  // la navegación (window.open, location.href), Safari la bloquea por seguridad.
+  function generarDataURI(p) {
     const contenido = generarICS(p);
-    const nombre = (p.objeto || 'prestamo').replace(/[^a-z0-9]/gi, '_');
-    return new File([contenido], `recordatorio-${nombre}.ics`, { type: 'text/calendar' });
+    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(contenido);
   }
 
-  async function compartirICS(p) {
-    if (!navigator.share) return false;
-    const archivo = generarArchivoICS(p);
-    if (navigator.canShare && !navigator.canShare({ files: [archivo] })) return false;
-    try {
-      await navigator.share({ files: [archivo], title: `Devolver: ${p.objeto}` });
-      return true;
-    } catch (err) {
-      return !!(err && err.name === 'AbortError'); // el usuario cerró el panel: no es un fallo
-    }
-  }
-
-  function abrirICSDirecto(p) {
-    const contenido = generarICS(p);
-    const uri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(contenido);
-    const a = document.createElement('a');
-    a.href = uri;
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
-
-  window.agregarAlarma = async function(id) {
-    const p = prestamos.find(x => x.id === id);
-    if (!p) return;
-    const exito = await compartirICS(p);
-    if (!exito) abrirICSDirecto(p);
-  };
-
-  window.abrirGoogleCalendar = async function(id) {
-    const p = prestamos.find(x => x.id === id);
-    if (!p) return;
-    const exito = await compartirICS(p);
-    if (exito) return;
+  function generarUrlGoogle(p) {
     const inicio = parseFecha(p.fechaDevolucion);
     const fin = new Date(inicio);
     fin.setDate(fin.getDate() + 1);
     const fmt = d => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
     const texto = encodeURIComponent(`Devolver: ${p.objeto} (${p.persona})`);
     const detalles = encodeURIComponent(`Prestado el ${p.fechaPrestamo} a ${p.persona}. Recuerda pedir de vuelta: ${p.objeto}.`);
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${texto}&dates=${fmt(inicio)}/${fmt(fin)}&details=${detalles}`;
-    window.open(url, '_blank');
-  };
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${texto}&dates=${fmt(inicio)}/${fmt(fin)}&details=${detalles}`;
+  }
 
   function render() {
     lista.innerHTML = '';
@@ -768,8 +732,8 @@
           <span class="estado ${estado}">${iconoEstado[estado]} ${textoEstado[estado]}</span>
         </div>
         <div class="botones-tarjeta ${p.devuelto ? 'devuelto' : ''}">
-          ${!p.devuelto ? `<button class="btn-mini btn-calendario" onclick="agregarAlarma('${p.id}')"><span class="ico">📅</span>iPhone</button>` : ''}
-          ${!p.devuelto ? `<button class="btn-mini btn-google" onclick="abrirGoogleCalendar('${p.id}')"><span class="ico">🗓️</span>Android</button>` : ''}
+          ${!p.devuelto ? `<a class="btn-mini btn-calendario" href="${generarDataURI(p)}"><span class="ico">📅</span>iPhone</a>` : ''}
+          ${!p.devuelto ? `<a class="btn-mini btn-google" href="${generarUrlGoogle(p)}" target="_blank" rel="noopener"><span class="ico">🗓️</span>Android</a>` : ''}
           ${!p.devuelto ? `<button class="btn-mini btn-devolver" onclick="marcarDevuelto('${p.id}')"><span class="ico">✔️</span>Devuelto</button>` : ''}
           <button class="btn-mini btn-eliminar" onclick="eliminar('${p.id}')"><span class="ico">🗑️</span>Eliminar</button>
         </div>
@@ -845,7 +809,8 @@
     }
 
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    prestamos.push({ id, objeto, persona, fechaPrestamo, fechaDevolucion, recordatorioDias, devuelto: false, ultimaNotificacion: null });
+    const nuevo = { id, objeto, persona, fechaPrestamo, fechaDevolucion, recordatorioDias, devuelto: false, ultimaNotificacion: null };
+    prestamos.push(nuevo);
 
     guardar();
     render();
@@ -855,16 +820,15 @@
       Notification.requestPermission().then(actualizarBotonNotif);
     }
 
-    idExito = id;
     document.getElementById('resumenExito').innerHTML =
       `<strong>${escapar(objeto)}</strong> prestado a <strong>${escapar(persona)}</strong><br>Devolver antes del <strong>${formatoFecha(parseFecha(fechaDevolucion))}</strong>`;
+    document.getElementById('btnAlarmaExito').href = generarDataURI(nuevo);
+    document.getElementById('btnGoogleExito').href = generarUrlGoogle(nuevo);
     fondoExito.classList.add('visible');
   });
 
-  document.getElementById('btnAlarmaExito').addEventListener('click', () => { if (idExito) agregarAlarma(idExito); });
-  document.getElementById('btnGoogleExito').addEventListener('click', () => { if (idExito) abrirGoogleCalendar(idExito); });
-  document.getElementById('btnCerrarExito').addEventListener('click', () => { fondoExito.classList.remove('visible'); idExito = null; });
-  fondoExito.addEventListener('click', e => { if (e.target === fondoExito) { fondoExito.classList.remove('visible'); idExito = null; } });
+  document.getElementById('btnCerrarExito').addEventListener('click', () => fondoExito.classList.remove('visible'));
+  fondoExito.addEventListener('click', e => { if (e.target === fondoExito) fondoExito.classList.remove('visible'); });
 
   // ---- Notificaciones dentro de la app (complemento a la del calendario) ----
   function actualizarBotonNotif() {
