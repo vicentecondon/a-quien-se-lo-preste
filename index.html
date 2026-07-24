@@ -640,48 +640,23 @@
     });
   }
 
-  // ---- Generación de evento de calendario (.ics) ----
   function pad(n) { return n.toString().padStart(2, '0'); }
-  function formatoICS(fecha, hora) { return `${fecha.getFullYear()}${pad(fecha.getMonth()+1)}${pad(fecha.getDate())}T${hora}00`; }
 
-  function generarICS(p) {
-    const inicio = parseFecha(p.fechaDevolucion);
-    const fin = new Date(inicio);
-    const dtstart = formatoICS(inicio, '090000');
-    const dtend = formatoICS(fin, '093000');
-    const ahora = new Date();
-    const dtstamp = `${ahora.getUTCFullYear()}${pad(ahora.getUTCMonth()+1)}${pad(ahora.getUTCDate())}T${pad(ahora.getUTCHours())}${pad(ahora.getUTCMinutes())}${pad(ahora.getUTCSeconds())}Z`;
-    const trigger = p.recordatorioDias > 0 ? `-P${p.recordatorioDias}D` : 'PT0S';
-
-    return [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//AQuienSeLoPreste//ES',
-      'BEGIN:VEVENT',
-      `UID:${p.id}@aquienseloprestre`,
-      `DTSTAMP:${dtstamp}`,
-      `DTSTART:${dtstart}`,
-      `DTEND:${dtend}`,
-      `SUMMARY:Devolver: ${p.objeto} (${p.persona})`,
-      `DESCRIPTION:Prestado el ${p.fechaPrestamo} a ${p.persona}. Recuerda pedir de vuelta: ${p.objeto}.`,
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:Recordatorio de devolución',
-      `TRIGGER:${trigger}`,
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
-  }
-
-  // Los botones son enlaces <a> reales (no botones con JS). Usamos blob: en vez de
-  // data: porque Safari bloquea por seguridad la navegación de nivel superior a
-  // data: (política antiphishing), pero blob: sí se trata como un recurso real con
-  // su propio tipo de contenido y puede abrir la hoja nativa de "Agregar evento".
+  // El evento se genera en un servidor real (Vercel), igual que hace Google
+  // Calendar: una URL de verdad con Content-Type: text/calendar, en vez de un
+  // archivo armado solo en la memoria del navegador (data:/blob:). Por eso este
+  // sí funciona de forma confiable en el Calendario nativo de iPhone.
+  const API_EVENTO = 'https://a-quien-se-lo-preste.vercel.app/api/evento';
   function generarDataURI(p) {
-    const contenido = generarICS(p);
-    const blob = new Blob([contenido], { type: 'text/calendar' });
-    return URL.createObjectURL(blob);
+    const params = new URLSearchParams({
+      objeto: p.objeto,
+      persona: p.persona,
+      fechaPrestamo: p.fechaPrestamo,
+      fechaDevolucion: p.fechaDevolucion,
+      recordatorioDias: p.recordatorioDias,
+      id: p.id
+    });
+    return `${API_EVENTO}?${params.toString()}`;
   }
 
   function generarUrlGoogle(p) {
